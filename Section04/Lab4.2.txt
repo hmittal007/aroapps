@@ -1,0 +1,9 @@
+#create rating api using github directly source to image feature, 
+first built the image and then deploy the app.
+
+oc new-app https://github.com/hmittal007/rating-api --strategy=source
+
+# configuring api to talk to mongodb by setting up env variable by configuring connection string.
+oc set env deploy/rating-api MONGODB_URI=mongodb://ratingsuser:ratingspassword@mongodb.workshop.svc.cluster.local:27017/ratingsdb
+
+oc get svc rating-api

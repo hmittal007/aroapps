@@ -1,0 +1,7 @@
+oc new-project workshop
+
+oc apply -f mongodb_temp.yml
+
+oc get all # Verify if the mongoDB pod was created successfully
+
+oc get svc mongodb #Retrieve mongoDB service hostname

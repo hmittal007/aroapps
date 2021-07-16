@@ -1,0 +1,11 @@
+# deploy rating-web, fe of our multi-tier application
+oc new-app https://github.com/hmittal007/rating-web --strategy=source
+
+# configure the env variable in our web app to talk to rating-api it can be done using webconsole
+oc set env deploy rating-web API=http://rating-api:8080
+
+# exposing the rating-web through ingress controller
+oc expose svc/rating-web
+
+# get the url of rating-web
+oc get route rating-web

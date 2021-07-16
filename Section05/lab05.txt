@@ -1,0 +1,29 @@
+# Let us deploy another app on our aro cluster name it as ostoy
+# this is good tool to test aro cluster and learn about more features of aro cluster
+# like pvc, secret, hpa, nslookup and replacing a pod by crashing it.
+# it is multi-tier application, with ostoy-fe and ostoy-microservice
+
+oc new-project ostoy
+
+oc apply -f ostoy-microservice-deployment.yaml
+
+oc apply -f ostoy-fe-deployment.yaml
+
+oc get route
+
+oc get pods
+
+# remote sh to pod.
+oc rsh <pod name>
+
+oc scale deployment ostoy-microservice --replicas=1
+
+oc autoscale deployment/ostoy-microservice --cpu-percent=80 --min=1 --max=10
+
+oc get hpa
+
+oc describe hpa/ostoy-microservice
+
+oc get -o yaml hpa/ostoy-microservice
+
+oc delete hpa/ostoy-microservice

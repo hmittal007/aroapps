@@ -1,0 +1,113 @@
+kind: List
+apiVersion: v1
+metadata: {}
+items:
+  - apiVersion: v1
+    kind: Secret
+    metadata:
+      labels:
+        app: mongodb-example
+        template: mongodb-example
+      name: mongodb-example
+    stringData:
+      database-admin-password: ratingspassword
+      database-password: ratingspassword
+      database-user: ratingsuser
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        description: Exposes the database server
+      labels:
+        app: mongodb-example
+        template: mongodb-example
+      name: mongodb
+    spec:
+      ports:
+        - name: mongodb
+          port: 27017
+          targetPort: 27017
+      selector:
+        name: mongodb
+  - apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    metadata:
+      annotations:
+        description: Defines how to deploy the database
+        template.alpha.openshift.io/wait-for-ready: 'true'
+      labels:
+        app: mongodb-example
+        template: mongodb-example
+      name: mongodb
+    spec:
+      replicas: 1
+      selector:
+        name: mongodb
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          labels:
+            name: mongodb
+          name: mongodb
+        spec:
+          containers:
+            - env:
+                - name: MONGODB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      key: database-user
+                      name: mongodb-example
+                - name: MONGODB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: database-password
+                      name: mongodb-example
+                - name: MONGODB_DATABASE
+                  value: ratingsdb
+                - name: MONGODB_ADMIN_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: database-admin-password
+                      name: mongodb-example
+              image: ' '
+              livenessProbe:
+                initialDelaySeconds: 30
+                tcpSocket:
+                  port: 27017
+                timeoutSeconds: 1
+              name: mongodb
+              ports:
+                - containerPort: 27017
+              readinessProbe:
+                exec:
+                  command:
+                    - /bin/sh
+                    - '-i'
+                    - '-c'
+                    - >-
+                      mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER
+                      -p $MONGODB_PASSWORD --eval="quit()"
+                initialDelaySeconds: 3
+                timeoutSeconds: 1
+              resources:
+                limits:
+                  memory: 512Mi
+              volumeMounts:
+                - mountPath: /var/lib/mongodb/data
+                  name: mongodb-data
+          volumes:
+            - emptyDir:
+                medium: ''
+              name: mongodb-data
+      triggers:
+        - imageChangeParams:
+            automatic: true
+            containerNames:
+              - mongodb
+            from:
+              kind: ImageStreamTag
+              name: 'mongodb:3.6'
+              namespace: openshift
+          type: ImageChange
+        - type: ConfigChange
